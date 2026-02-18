@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library System</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input, button { padding: 8px; margin: 5px; font-size: 14px; }
+        button { cursor: pointer; background: #007bff; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1>📚 Library System</h1>
+    
+    <div id="login-section">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="email" id="email" placeholder="Email">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="menu-section" style="display:none;">
+        <h2>Menu</h2>
+        <p>Welcome, <strong id="current-user"></strong></p>
+        <button onclick="goToSearch()">🔍 Search Books</button>
+        <button onclick="goToLoans()">📖 My Loans</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        window.onload = function() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                showMenu();
+            }
+        };
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            
+            if (!username || !email) {
+                alert('Please enter username and email');
+                return;
+            }
+
+            fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email })
+            })
+            .then(r => r.json())
+            .then(user => {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showMenu();
+            })
+            .catch(e => alert('Error: ' + e));
+        }
+
+        function showMenu() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('menu-section').style.display = 'block';
+            document.getElementById('current-user').textContent = currentUser.username;
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('menu-section').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('email').value = '';
+        }
+
+        function goToSearch() {
+            window.location.href = '/search.html';
+        }
+
+        function goToLoans() {
+            window.location.href = '/loans.html';
+        }
+    </script>
+</body>
+</html>

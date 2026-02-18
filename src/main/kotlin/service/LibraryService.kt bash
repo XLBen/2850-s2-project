@@ -1,0 +1,91 @@
+cat > src/main/kotlin/service/LibraryService.kt << 'EOF'
+package service
+
+import model.*
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import service.DatabaseFactory.dbExec
+
+class LibraryService {
+
+    // ===== User =====
+    suspend fun createUser(username: String, email: String): User {
+        var id = 0
+        dbExec {
+            id = (Users.insert {
+                it[Users.username] = username
+                it[Users.email] = email
+            } get Users.id)
+        }
+        return User(id, username, email)
+    }
+
+    suspend fun getAllUsers() = dbExec { Users.selectAll().map { User(it[Users.id], it[Users.username], it[Users.email]) } }
+
+    // ===== Book =====
+    suspend fun createBook(title: String, author: String): Book {
+        var id = 0
+        dbExec {
+            id = (Books.insert {
+                it[Books.title] = title
+                it[Books.author] = author
+                it[Books.status] = "available"
+            } get Books.id)
+        }
+        return Book(id, title, author, "available")
+    }
+
+    suspend fun getAllBooks() = dbExec { Books.selectAll().map { Book(it[Books.id], it[Books.title], it[Books.author], it[Books.status]) } }
+
+    suspend fun searchBooks(keyword: String) = dbExec {
+        Books.selectAll().where { (Books.title like "%$keyword%") or (Books.author like "%$keyword%") }
+            .map { Book(it[Books.id], it[Books.title], it[Books.author], it[Books.status]) }
+    }
+
+    suspend fun getBook(id: Int) = dbExec {
+        Books.selectAll().where { Books.id eq id }
+            .map { Book(it[Books.id], it[Books.title], it[Books.author], it[Books.status]) }
+            .firstOrNull()
+    }
+
+    suspend fun updateBookStatus(bookId: Int, status: String) {
+        dbExec { Books.update({ Books.id eq bookId }) { it[Books.status] = status } }
+    }
+
+    // ===== Loan =====
+    suspend fun borrowBook(userId: Int, bookId: Int): Loan {
+        updateBookStatus(bookId, "borrowed")
+        var id = 0
+        dbExec {
+            id = (Loans.insert {
+                it[Loans.userId] = userId
+                it[Loans.bookId] = bookId
+                it[Loans.borrowDate] = System.currentTimeMillis()
+            } get Loans.id)
+        }
+        return Loan(id, userId, bookId, System.currentTimeMillis())
+    }
+
+    suspend fun returnBook(loanId: Int) {
+        dbExec {
+            val loan = Loans.selectAll().where { Loans.id eq loanId }.firstOrNull()
+            if (loan != null) {
+                updateBookStatus(loan[Loans.bookId], "available")
+                Loans.update({ Loans.id eq loanId }) { it[Loans.returnDate] = System.currentTimeMillis() }
+            }
+        }
+    }
+
+    suspend fun getUserLoans(userId: Int) = dbExec {
+        Loans.selectAll().where { Loans.userId eq userId }
+            .map { Loan(it[Loans.id], it[Loans.userId], it[Loans.bookId], it[Loans.borrowDate], it[Loans.returnDate]) }
+    }
+
+    suspend fun getActiveLoansByUser(userId: Int) = dbExec {
+        Loans.selectAll().where { (Loans.userId eq userId) and (Loans.returnDate.isNull()) }
+            .map { Loan(it[Loans.id], it[Loans.userId], it[Loans.bookId], it[Loans.borrowDate], it[Loans.returnDate]) }
+    }
+}
+EOF

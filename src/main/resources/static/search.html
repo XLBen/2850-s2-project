@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Books</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input, button { padding: 8px; margin: 5px; font-size: 14px; }
+        button { cursor: pointer; background: #007bff; color: white; border: none; }
+        .book { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .book button { background: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Search Books</h1>
+    
+    <input type="text" id="search-input" placeholder="Search by title or author">
+    <button onclick="search()">Search</button>
+    <button onclick="goHome()">Home</button>
+
+    <div id="books-list"></div>
+
+    <script>
+        let currentUser = null;
+
+        window.onload = function() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            currentUser = JSON.parse(user);
+            loadAllBooks();
+        };
+
+        function loadAllBooks() {
+            fetch('/api/books')
+                .then(r => r.json())
+                .then(books => displayBooks(books))
+                .catch(e => alert('Error: ' + e));
+        }
+
+        function search() {
+            const keyword = document.getElementById('search-input').value;
+            fetch('/api/books/search?q=' + keyword)
+                .then(r => r.json())
+                .then(books => displayBooks(books))
+                .catch(e => alert('Error: ' + e));
+        }
+
+        function displayBooks(books) {
+            const html = books.map(book => `
+                <div class="book">
+                    <h3>${book.title}</h3>
+                    <p>Author: ${book.author}</p>
+                    <p>Status: ${book.status}</p>
+                    ${book.status === 'available' ? 
+                        `<button onclick="borrowBook(${book.id})">Borrow</button>` : 
+                        '<button disabled>Borrowed</button>'}
+                </div>
+            `).join('');
+            document.getElementById('books-list').innerHTML = html;
+        }
+
+        function borrowBook(bookId) {
+            fetch('/api/loans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, bookId: bookId })
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert('Book borrowed successfully!');
+                loadAllBooks();
+            })
+            .catch(e => alert('Error: ' + e));
+        }
+
+        function goHome() {
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

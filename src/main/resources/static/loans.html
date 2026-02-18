@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Loans</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        button { padding: 8px; margin: 5px; font-size: 14px; cursor: pointer; background: #007bff; color: white; border: none; }
+        .loan { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .loan button { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>📖 My Loans</h1>
+    
+    <button onclick="goHome()">Home</button>
+
+    <div id="loans-list"></div>
+
+    <script>
+        let currentUser = null;
+
+        window.onload = function() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            currentUser = JSON.parse(user);
+            loadLoans();
+        };
+
+        function loadLoans() {
+            fetch('/api/loans/user/' + currentUser.id)
+                .then(r => r.json())
+                .then(loans => displayLoans(loans))
+                .catch(e => alert('Error: ' + e));
+        }
+
+        function displayLoans(loans) {
+            if (loans.length === 0) {
+                document.getElementById('loans-list').innerHTML = '<p>No loans</p>';
+                return;
+            }
+
+            const html = loans.map(loan => {
+                const status = loan.returnDate ? '✅ Returned' : '📖 Active';
+                return `
+                    <div class="loan">
+                        <p>Book ID: ${loan.bookId}</p>
+                        <p>Status: ${status}</p>
+                        <p>Borrow Date: ${new Date(loan.borrowDate).toLocaleString()}</p>
+                        ${!loan.returnDate ? `<button onclick="returnBook(${loan.id})">Return Book</button>` : ''}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('loans-list').innerHTML = html;
+        }
+
+        function returnBook(loanId) {
+            fetch('/api/loans/' + loanId + '/return', { method: 'POST' })
+                .then(r => r.json())
+                .then(() => {
+                    alert('Book returned successfully!');
+                    loadLoans();
+                })
+                .catch(e => alert('Error: ' + e));
+        }
+
+        function goHome() {
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
