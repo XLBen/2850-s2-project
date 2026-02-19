@@ -3,23 +3,96 @@
 <head>
     <title>My Loans</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        button { padding: 8px; margin: 5px; font-size: 14px; cursor: pointer; background: #007bff; color: white; border: none; }
-        .loan { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
-        .loan button { background: #dc3545; }
+        :root {
+            --font-size-base: 14px;
+            --font-size-h1: 32px;
+            --font-size-h2: 24px;
+            --font-size-button: 16px;
+        }
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast button {
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+        body.high-contrast .warning {
+            background-color: #ff6600 !important;
+            color: #000000 !important;
+        }
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 20px;
+            font-size: var(--font-size-base);
+        }
+        h1 { font-size: var(--font-size-h1); }
+        button { padding: 8px; margin: 5px; font-size: var(--font-size-button); cursor: pointer; background: #007bff; color: white; border: none; }
+        .accessibility-panel { display: flex; gap: 15px; margin-bottom: 20px; padding: 10px; border: 2px solid #ccc; }
+        .font-size-controls { display: flex; gap: 5px; }
+        .font-size-btn { padding: 5px 10px; min-width: 40px; }
+        .loan { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .loan h3 { margin: 0 0 10px 0; }
+        .loan p { margin: 5px 0; }
+        .warning {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+            padding: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.3s;
+        }
+        .progress-fill.warning {
+            background-color: #ff9800;
+        }
+        .progress-fill.danger {
+            background-color: #f44336;
+        }
     </style>
 </head>
 <body>
     <h1>📖 My Loans</h1>
     
+    <div class="accessibility-panel">
+        <div class="font-size-controls">
+            <button class="font-size-btn" onclick="decreaseFont()">A−</button>
+            <button class="font-size-btn" onclick="resetFont()">A</button>
+            <button class="font-size-btn" onclick="increaseFont()">A+</button>
+        </div>
+        <button onclick="toggleContrast()">🎨 High Contrast</button>
+    </div>
+
     <button onclick="goHome()">Home</button>
 
     <div id="loans-list"></div>
 
     <script>
         let currentUser = null;
+        const LOAN_DURATION_DAYS = 14;
 
         window.onload = function() {
+            loadAccessibilitySettings();
             const user = localStorage.getItem('currentUser');
             if (!user) {
                 window.location.href = '/index.html';
@@ -28,6 +101,90 @@
             currentUser = JSON.parse(user);
             loadLoans();
         };
+
+        function loadAccessibilitySettings() {
+            const settings = localStorage.getItem('accessibility');
+            if (!settings) return;
+            
+            const data = JSON.parse(settings);
+            if (data.isHighContrast) {
+                document.body.classList.add('high-contrast');
+            }
+            if (data.fontSize && data.fontSize !== '14px') {
+                document.documentElement.style.setProperty('--font-size-base', data.fontSize);
+                const size = parseFloat(data.fontSize);
+                document.documentElement.style.setProperty('--font-size-h1', (size + 18) + 'px');
+                document.documentElement.style.setProperty('--font-size-h2', (size + 10) + 'px');
+                document.documentElement.style.setProperty('--font-size-button', (size + 2) + 'px');
+            }
+        }
+
+        function increaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize < 24) {
+                root.style.setProperty('--font-size-base', (currentSize + 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize + 18) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize + 10) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize + 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function decreaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize > 10) {
+                root.style.setProperty('--font-size-base', (currentSize - 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize - 6) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize - 2) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize - 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function resetFont() {
+            const root = document.documentElement;
+            root.style.setProperty('--font-size-base', '14px');
+            root.style.setProperty('--font-size-h1', '32px');
+            root.style.setProperty('--font-size-h2', '24px');
+            root.style.setProperty('--font-size-button', '16px');
+            saveAccessibilitySettings();
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            saveAccessibilitySettings();
+        }
+
+        function saveAccessibilitySettings() {
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            const fontSize = getComputedStyle(document.documentElement).getPropertyValue('--font-size-base');
+            localStorage.setItem('accessibility', JSON.stringify({
+                isHighContrast: isHighContrast,
+                fontSize: fontSize
+            }));
+        }
+
+        function getDaysSinceBorrow(borrowDate) {
+            const now = new Date().getTime();
+            const diff = now - borrowDate;
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function getRemainingDays(borrowDate) {
+            const days = getDaysSinceBorrow(borrowDate);
+            return Math.max(0, LOAN_DURATION_DAYS - days);
+        }
+
+        function isOverdue(borrowDate) {
+            return getDaysSinceBorrow(borrowDate) > LOAN_DURATION_DAYS;
+        }
+
+        function getProgressPercentage(borrowDate) {
+            const days = getDaysSinceBorrow(borrowDate);
+            return Math.min(100, (days / LOAN_DURATION_DAYS) * 100);
+        }
 
         function loadLoans() {
             fetch('/api/loans/user/' + currentUser.id)
@@ -42,17 +199,60 @@
                 return;
             }
 
-            const html = loans.map(loan => {
-                const status = loan.returnDate ? '✅ Returned' : '📖 Active';
-                return `
-                    <div class="loan">
-                        <p>Book ID: ${loan.bookId}</p>
-                        <p>Status: ${status}</p>
-                        <p>Borrow Date: ${new Date(loan.borrowDate).toLocaleString()}</p>
-                        ${!loan.returnDate ? `<button onclick="returnBook(${loan.id})">Return Book</button>` : ''}
-                    </div>
-                `;
-            }).join('');
+            const activeLoans = loans.filter(l => !l.returnDate);
+            const returnedLoans = loans.filter(l => l.returnDate);
+
+            let html = '';
+
+            if (activeLoans.length > 0) {
+                html += '<h2>📚 Active Loans</h2>';
+                html += activeLoans.map(loan => {
+                    const days = getDaysSinceBorrow(loan.borrowDate);
+                    const remaining = getRemainingDays(loan.borrowDate);
+                    const overdue = isOverdue(loan.borrowDate);
+                    const progress = getProgressPercentage(loan.borrowDate);
+                    
+                    let statusHTML = '';
+                    if (overdue) {
+                        statusHTML = `<div class="warning">⚠️ OVERDUE - Please return immediately!</div>`;
+                    } else if (remaining <= 3) {
+                        statusHTML = `<div class="warning">⚠️ Due in ${remaining} day${remaining === 1 ? '' : 's'}</div>`;
+                    } else {
+                        statusHTML = `<div class="success">✓ ${remaining} days remaining</div>`;
+                    }
+
+                    const progressClass = overdue ? 'danger' : (remaining <= 3 ? 'warning' : '');
+
+                    return `
+                        <div class="loan">
+                            <h3>Book ID: ${loan.bookId}</h3>
+                            <p>Borrowed: ${new Date(loan.borrowDate).toLocaleDateString()}</p>
+                            <p>Days since borrow: ${days}</p>
+                            ${statusHTML}
+                            <div class="progress-bar">
+                                <div class="progress-fill ${progressClass}" style="width: ${progress}%"></div>
+                            </div>
+                            <button onclick="returnBook(${loan.id})">Return Book</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (returnedLoans.length > 0) {
+                html += '<h2>✅ Returned Loans</h2>';
+                html += returnedLoans.map(loan => {
+                    const borrowedDate = new Date(loan.borrowDate).toLocaleDateString();
+                    const returnedDate = new Date(loan.returnDate).toLocaleDateString();
+                    return `
+                        <div class="loan">
+                            <h3>Book ID: ${loan.bookId}</h3>
+                            <p>Borrowed: ${borrowedDate}</p>
+                            <p>Returned: ${returnedDate}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+
             document.getElementById('loans-list').innerHTML = html;
         }
 

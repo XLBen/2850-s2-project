@@ -3,19 +3,52 @@
 <head>
     <title>Search Books</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        input, button { padding: 8px; margin: 5px; font-size: 14px; }
+        :root {
+            --font-size-base: 14px;
+            --font-size-h1: 32px;
+            --font-size-h2: 24px;
+            --font-size-button: 16px;
+        }
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast button {
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 20px;
+            font-size: var(--font-size-base);
+        }
+        h1 { font-size: var(--font-size-h1); }
+        input, button { padding: 8px; margin: 5px; font-size: var(--font-size-button); }
         button { cursor: pointer; background: #007bff; color: white; border: none; }
+        .accessibility-panel { display: flex; gap: 15px; margin-bottom: 20px; padding: 10px; border: 2px solid #ccc; }
+        .font-size-controls { display: flex; gap: 5px; }
+        .font-size-btn { padding: 5px 10px; min-width: 40px; }
         .book { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
-        .book button { background: #28a745; }
     </style>
 </head>
 <body>
     <h1>🔍 Search Books</h1>
     
-    <input type="text" id="search-input" placeholder="Search by title or author">
-    <button onclick="search()">Search</button>
-    <button onclick="goHome()">Home</button>
+    <div class="accessibility-panel">
+        <div class="font-size-controls">
+            <button class="font-size-btn" onclick="decreaseFont()">A−</button>
+            <button class="font-size-btn" onclick="resetFont()">A</button>
+            <button class="font-size-btn" onclick="increaseFont()">A+</button>
+        </div>
+        <button onclick="toggleContrast()">🎨 High Contrast</button>
+    </div>
+
+    <div>
+        <input type="text" id="search-input" placeholder="Search by title or author">
+        <button onclick="search()">Search</button>
+        <button onclick="goHome()">Home</button>
+    </div>
 
     <div id="books-list"></div>
 
@@ -23,6 +56,7 @@
         let currentUser = null;
 
         window.onload = function() {
+            loadAccessibilitySettings();
             const user = localStorage.getItem('currentUser');
             if (!user) {
                 window.location.href = '/index.html';
@@ -31,6 +65,70 @@
             currentUser = JSON.parse(user);
             loadAllBooks();
         };
+
+        function loadAccessibilitySettings() {
+            const settings = localStorage.getItem('accessibility');
+            if (!settings) return;
+            
+            const data = JSON.parse(settings);
+            if (data.isHighContrast) {
+                document.body.classList.add('high-contrast');
+            }
+            if (data.fontSize && data.fontSize !== '14px') {
+                document.documentElement.style.setProperty('--font-size-base', data.fontSize);
+                const size = parseFloat(data.fontSize);
+                document.documentElement.style.setProperty('--font-size-h1', (size + 18) + 'px');
+                document.documentElement.style.setProperty('--font-size-h2', (size + 10) + 'px');
+                document.documentElement.style.setProperty('--font-size-button', (size + 2) + 'px');
+            }
+        }
+
+        function increaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize < 24) {
+                root.style.setProperty('--font-size-base', (currentSize + 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize + 18) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize + 10) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize + 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function decreaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize > 10) {
+                root.style.setProperty('--font-size-base', (currentSize - 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize - 6) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize - 2) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize - 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function resetFont() {
+            const root = document.documentElement;
+            root.style.setProperty('--font-size-base', '14px');
+            root.style.setProperty('--font-size-h1', '32px');
+            root.style.setProperty('--font-size-h2', '24px');
+            root.style.setProperty('--font-size-button', '16px');
+            saveAccessibilitySettings();
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            saveAccessibilitySettings();
+        }
+
+        function saveAccessibilitySettings() {
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            const fontSize = getComputedStyle(document.documentElement).getPropertyValue('--font-size-base');
+            localStorage.setItem('accessibility', JSON.stringify({
+                isHighContrast: isHighContrast,
+                fontSize: fontSize
+            }));
+        }
 
         function loadAllBooks() {
             fetch('/api/books')

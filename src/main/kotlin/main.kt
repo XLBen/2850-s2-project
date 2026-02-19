@@ -4,6 +4,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.http.content.*
+import io.ktor.server.http.content.*
 import service.DatabaseFactory
 import service.LibraryService
 import util.JsonMapper
@@ -19,10 +20,10 @@ fun Application.module() {
     val service = LibraryService()
 
     routing {
-        staticResources("", "static")
-        index()
-        api(service)
-    }
+    staticResources("", "static")
+    index()
+    api(service)
+}
 }
 
 fun main(args: Array<String>) {

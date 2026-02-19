@@ -3,14 +3,63 @@
 <head>
     <title>Library System</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        input, button { padding: 8px; margin: 5px; font-size: 14px; }
+        :root {
+            --font-size-base: 14px;
+            --font-size-h1: 32px;
+            --font-size-h2: 24px;
+            --font-size-button: 16px;
+        }
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast button {
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: var(--font-size-base);
+        }
+        h1 { font-size: var(--font-size-h1); }
+        h2 { font-size: var(--font-size-h2); }
+        input, button { padding: 8px; margin: 5px; font-size: var(--font-size-button); }
         button { cursor: pointer; background: #007bff; color: white; border: none; }
+        .accessibility-panel {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        .font-size-controls { display: flex; gap: 5px; }
+        .font-size-btn { padding: 5px 10px; min-width: 40px; font-weight: bold; }
+        .menu-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .menu-button { padding: 30px; font-size: 18px; text-align: center; border-radius: 8px; }
+        .menu-icon { font-size: 50px; display: block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <h1>📚 Library System</h1>
     
+    <div class="accessibility-panel">
+        <div class="font-size-controls">
+            <button class="font-size-btn" onclick="decreaseFont()">A−</button>
+            <button class="font-size-btn" onclick="resetFont()">A</button>
+            <button class="font-size-btn" onclick="increaseFont()">A+</button>
+        </div>
+        <button onclick="toggleContrast()">🎨 High Contrast</button>
+    </div>
+
     <div id="login-section">
         <h2>Login</h2>
         <input type="text" id="username" placeholder="Username">
@@ -19,10 +68,26 @@
     </div>
 
     <div id="menu-section" style="display:none;">
-        <h2>Menu</h2>
-        <p>Welcome, <strong id="current-user"></strong></p>
-        <button onclick="goToSearch()">🔍 Search Books</button>
-        <button onclick="goToLoans()">📖 My Loans</button>
+        <h2>Welcome, <strong id="current-user"></strong></h2>
+        <div class="menu-section">
+            <button class="menu-button" onclick="goToSearch()">
+                <span class="menu-icon">🔍</span>
+                Search Books
+            </button>
+            <button class="menu-button" onclick="goToLoans()">
+                <span class="menu-icon">📖</span>
+                My Loans
+            </button>
+            <button class="menu-button" onclick="goToIdCard()">
+                <span class="menu-icon">🆔</span>
+                ID Card
+            </button>
+            <button class="menu-button" onclick="goToCallStaff()">
+                <span class="menu-icon">📞</span>
+                Call Staff
+            </button>
+        </div>
+        <br>
         <button onclick="logout()">Logout</button>
     </div>
 
@@ -30,12 +95,77 @@
         let currentUser = null;
 
         window.onload = function() {
+            loadAccessibilitySettings();
             const user = localStorage.getItem('currentUser');
             if (user) {
                 currentUser = JSON.parse(user);
                 showMenu();
             }
         };
+
+        function increaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize < 24) {
+                root.style.setProperty('--font-size-base', (currentSize + 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize + 18) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize + 10) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize + 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function decreaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize > 10) {
+                root.style.setProperty('--font-size-base', (currentSize - 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize - 6) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize - 2) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize - 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function resetFont() {
+            const root = document.documentElement;
+            root.style.setProperty('--font-size-base', '14px');
+            root.style.setProperty('--font-size-h1', '32px');
+            root.style.setProperty('--font-size-h2', '24px');
+            root.style.setProperty('--font-size-button', '16px');
+            saveAccessibilitySettings();
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            saveAccessibilitySettings();
+        }
+
+        function saveAccessibilitySettings() {
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            const fontSize = getComputedStyle(document.documentElement).getPropertyValue('--font-size-base');
+            localStorage.setItem('accessibility', JSON.stringify({
+                isHighContrast: isHighContrast,
+                fontSize: fontSize
+            }));
+        }
+
+        function loadAccessibilitySettings() {
+            const settings = localStorage.getItem('accessibility');
+            if (!settings) return;
+            
+            const data = JSON.parse(settings);
+            if (data.isHighContrast) {
+                document.body.classList.add('high-contrast');
+            }
+            if (data.fontSize && data.fontSize !== '14px') {
+                document.documentElement.style.setProperty('--font-size-base', data.fontSize);
+                const size = parseFloat(data.fontSize);
+                document.documentElement.style.setProperty('--font-size-h1', (size + 18) + 'px');
+                document.documentElement.style.setProperty('--font-size-h2', (size + 10) + 'px');
+                document.documentElement.style.setProperty('--font-size-button', (size + 2) + 'px');
+            }
+        }
 
         function login() {
             const username = document.getElementById('username').value;
@@ -75,13 +205,10 @@
             document.getElementById('email').value = '';
         }
 
-        function goToSearch() {
-            window.location.href = '/search.html';
-        }
-
-        function goToLoans() {
-            window.location.href = '/loans.html';
-        }
+        function goToSearch() { window.location.href = '/search.html'; }
+        function goToLoans() { window.location.href = '/loans.html'; }
+        function goToIdCard() { window.location.href = '/id-card.html'; }
+        function goToCallStaff() { window.location.href = '/call-staff.html'; }
     </script>
 </body>
 </html>
