@@ -99,6 +99,18 @@ class LibraryService {
         }
     }
 
+    suspend fun debugAdjustLoanDate(loanId: Int, daysToSubtract: Int) {
+        dbExec {
+            val loan = Loans.selectAll().where { Loans.id eq loanId }.firstOrNull()
+            if (loan != null) {
+                val newDate = loan[Loans.borrowDate] - (daysToSubtract * 24L * 60 * 60 * 1000)
+                Loans.update({ Loans.id eq loanId }) {
+                    it[Loans.borrowDate] = newDate
+                }
+            }
+        }
+    }
+
     suspend fun getUserLoans(userId: Int) = dbExec {
         Loans.selectAll().where { Loans.userId eq userId }
             .map { Loan(it[Loans.id], it[Loans.userId], it[Loans.bookId], it[Loans.borrowDate], it[Loans.returnDate]) }
@@ -177,16 +189,16 @@ class LibraryService {
     }
 
     suspend fun updateServiceRequestStatus(requestId: Int, status: String): ServiceRequest? = dbExec {
-    ServiceRequests.update({ ServiceRequests.id eq requestId }) {
-        it[ServiceRequests.status] = status
+        ServiceRequests.update({ ServiceRequests.id eq requestId }) {
+            it[ServiceRequests.status] = status
+        }
+        val result = ServiceRequests.selectAll().where { ServiceRequests.id eq requestId }.firstOrNull()
+        if (result != null) {
+            ServiceRequest(result[ServiceRequests.id], result[ServiceRequests.userId], result[ServiceRequests.status], result[ServiceRequests.requestType], result[ServiceRequests.createdAt])
+        } else {
+            null
+        }
     }
-    val result = ServiceRequests.selectAll().where { ServiceRequests.id eq requestId }.firstOrNull()
-    if (result != null) {
-        ServiceRequest(result[ServiceRequests.id], result[ServiceRequests.userId], result[ServiceRequests.status], result[ServiceRequests.requestType], result[ServiceRequests.createdAt])
-    } else {
-        null
-    }
-}
 
     suspend fun getUserServiceRequests(userId: Int) = dbExec {
         ServiceRequests.selectAll().where { ServiceRequests.userId eq userId }

@@ -57,4 +57,11 @@ fun Route.api(service: LibraryService) {
         service.returnBook(loanId)
         call.respond(mapOf("status" to "returned"))
     }
+    put("/api/loans/{loanId}/debug-adjust-date") {
+        val loanId = call.parameters["loanId"]!!.toInt()
+        val req = call.receive<Map<String, Int>>()
+        val days = req["daysToSubtract"] ?: 0
+        service.debugAdjustLoanDate(loanId, days)
+        call.respond(mapOf("status" to "adjusted", "daysSubtracted" to days.toString()))
+    }
 }

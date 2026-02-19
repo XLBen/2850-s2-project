@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital ID Card</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --font-size-base: 14px;
+            --font-size-h1: 32px;
+            --font-size-h2: 24px;
+            --font-size-button: 16px;
+        }
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast button {
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 20px;
+            font-size: var(--font-size-base);
+        }
+        h1 { font-size: var(--font-size-h1); }
+        button { padding: 8px; margin: 5px; font-size: var(--font-size-button); cursor: pointer; background: #007bff; color: white; border: none; }
+        .accessibility-panel { display: flex; gap: 15px; margin-bottom: 20px; padding: 10px; border: 2px solid #ccc; }
+        .font-size-controls { display: flex; gap: 5px; }
+        .font-size-btn { padding: 5px 10px; min-width: 40px; }
+        .id-card {
+            border: 2px solid #333;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 8px;
+            max-width: 400px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        body.high-contrast .id-card {
+            background-color: #000000;
+            border-color: #ffff00;
+        }
+        .id-card h2 { margin: 0 0 10px 0; }
+        .id-card p { margin: 5px 0; }
+        .card-number { font-size: 20px; font-weight: bold; margin: 15px 0; font-family: monospace; }
+        #qrcode {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        #qrcode img { max-width: 100%; }
+        .card-info { margin: 15px 0; text-align: left; }
+        .card-info p { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <h1>🆔 Digital ID Card</h1>
+    
+    <div class="accessibility-panel">
+        <div class="font-size-controls">
+            <button class="font-size-btn" onclick="decreaseFont()">A−</button>
+            <button class="font-size-btn" onclick="resetFont()">A</button>
+            <button class="font-size-btn" onclick="increaseFont()">A+</button>
+        </div>
+        <button onclick="toggleContrast()">🎨 High Contrast</button>
+    </div>
+
+    <button onclick="goHome()">Home</button>
+
+    <div class="id-card">
+        <h2 id="card-title">Library Card</h2>
+        <div class="card-info">
+            <p><strong>Name:</strong> <span id="user-name"></span></p>
+            <p><strong>User ID:</strong> <span id="user-id"></span></p>
+            <p><strong>Email:</strong> <span id="user-email"></span></p>
+        </div>
+        <div id="qrcode"></div>
+        <p style="font-size: 12px; margin-top: 15px; color: #666;">Scan this QR code to verify your identity</p>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        window.onload = function() {
+            loadAccessibilitySettings();
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            currentUser = JSON.parse(user);
+            displayIdCard();
+        };
+
+        function loadAccessibilitySettings() {
+            const settings = localStorage.getItem('accessibility');
+            if (!settings) return;
+            
+            const data = JSON.parse(settings);
+            if (data.isHighContrast) {
+                document.body.classList.add('high-contrast');
+            }
+            if (data.fontSize && data.fontSize !== '14px') {
+                document.documentElement.style.setProperty('--font-size-base', data.fontSize);
+                const size = parseFloat(data.fontSize);
+                document.documentElement.style.setProperty('--font-size-h1', (size + 18) + 'px');
+                document.documentElement.style.setProperty('--font-size-h2', (size + 10) + 'px');
+                document.documentElement.style.setProperty('--font-size-button', (size + 2) + 'px');
+            }
+        }
+
+        function increaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize < 24) {
+                root.style.setProperty('--font-size-base', (currentSize + 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize + 18) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize + 10) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize + 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function decreaseFont() {
+            const root = document.documentElement;
+            let currentSize = parseFloat(getComputedStyle(root).getPropertyValue('--font-size-base'));
+            if (currentSize > 10) {
+                root.style.setProperty('--font-size-base', (currentSize - 4) + 'px');
+                root.style.setProperty('--font-size-h1', (currentSize - 6) + 'px');
+                root.style.setProperty('--font-size-h2', (currentSize - 2) + 'px');
+                root.style.setProperty('--font-size-button', (currentSize - 2) + 'px');
+                saveAccessibilitySettings();
+            }
+        }
+
+        function resetFont() {
+            const root = document.documentElement;
+            root.style.setProperty('--font-size-base', '14px');
+            root.style.setProperty('--font-size-h1', '32px');
+            root.style.setProperty('--font-size-h2', '24px');
+            root.style.setProperty('--font-size-button', '16px');
+            saveAccessibilitySettings();
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            saveAccessibilitySettings();
+        }
+
+        function saveAccessibilitySettings() {
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            const fontSize = getComputedStyle(document.documentElement).getPropertyValue('--font-size-base');
+            localStorage.setItem('accessibility', JSON.stringify({
+                isHighContrast: isHighContrast,
+                fontSize: fontSize
+            }));
+        }
+
+        function displayIdCard() {
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('user-id').textContent = currentUser.id;
+            document.getElementById('user-email').textContent = currentUser.email;
+            
+            const qrcodeData = 'User:' + currentUser.id + '|' + currentUser.username + '|' + currentUser.email;
+            const qrcodeElement = document.getElementById('qrcode');
+            qrcodeElement.innerHTML = '';
+            new QRCode(qrcodeElement, qrcodeData);
+        }
+
+        function goHome() {
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

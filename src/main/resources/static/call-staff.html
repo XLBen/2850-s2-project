@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Call Staff</title>
+    <style>
+        :root {
+            --font-size-base: 14px;
+            --font-size-h1: 32px;
+            --font-size-h2: 24px;
+            --font-size-button: 16px;
+        }
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast button {
+            background-color: #000000 !important;
+            color: #ffff00 !important;
+            border: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .type-btn {
+            background-color: #00cc00 !important;
+            color: #000000 !important;
+        }
+        body.high-contrast .request-card {
+            border: 1px solid #ffff00 !important;
+            background-color: #000000 !important;
+        }
+        body.high-contrast .status-badge {
+            border: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .status-message {
+            color: #ffff00 !important;
+        }
+        body.high-contrast .timer {
+            color: #ffff00 !important;
+        }
+        body.high-contrast .step-text {
+            color: #ffff00 !important;
+        }
+        body.high-contrast .cancel-btn {
+            background-color: #ff3333 !important;
+            color: #ffff00 !important;
+        }
+        body.high-contrast .accessibility-panel {
+            background-color: #000000 !important;
+            border-bottom: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .top-bar {
+            background-color: #000000 !important;
+            border-bottom: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .bottom-nav {
+            background-color: #000000 !important;
+            border-top: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .main-content {
+            background-color: #000000 !important;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            font-size: var(--font-size-base);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .top-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .title {
+            flex: 1;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .accessibility-panel {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .font-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .font-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .font-btn:hover {
+            background-color: #0056b3;
+        }
+        .contrast-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .contrast-btn:hover {
+            background-color: #0056b3;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+        #request-types {
+            display: block;
+        }
+        #request-types.hidden {
+            display: none;
+        }
+        .type-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .type-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .type-btn:hover {
+            background-color: #218838;
+        }
+        #status-section {
+            display: none;
+            text-align: center;
+        }
+        #status-section.show {
+            display: block;
+        }
+        .ripple-container {
+            width: 120px;
+            height: 120px;
+            margin: 30px auto;
+            position: relative;
+        }
+        .ripple {
+            position: absolute;
+            border: 2px solid #007bff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: ripple-anim 1.5s infinite;
+        }
+        .ripple:nth-child(1) { animation-delay: 0s; }
+        .ripple:nth-child(2) { animation-delay: 0.5s; }
+        .ripple:nth-child(3) { animation-delay: 1s; }
+        @keyframes ripple-anim {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            100% {
+                width: 120px;
+                height: 120px;
+                opacity: 0;
+            }
+        }
+        .status-message {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+        .timer {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .progress-steps {
+            margin: 20px 0;
+            text-align: left;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .step {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+            align-items: center;
+        }
+        .step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .step.done .step-icon {
+            background-color: #28a745;
+        }
+        .step.active .step-icon {
+            background-color: #007bff;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .step-text {
+            font-size: 13px;
+            color: #666;
+        }
+        .step.done .step-text {
+            color: #333;
+        }
+        .step.active .step-text {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .request-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+            text-align: left;
+        }
+        .request-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        .request-card p {
+            margin: 6px 0;
+            font-size: 12px;
+            color: #666;
+        }
+        .cancel-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .cancel-btn:hover {
+            background-color: #c82333;
+        }
+        .success-message {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .bottom-nav {
+            background-color: white;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <button class="back-btn" onclick="goHome()">←</button>
+            <div class="title">Call Staff</div>
+        </div>
+
+        <div class="accessibility-panel">
+            <div class="font-controls">
+                <button class="font-btn" onclick="decreaseFont()">A−</button>
+                <button class="font-btn" onclick="resetFont()">A</button>
+                <button class="font-btn" onclick="increaseFont()">A+</button>
+            </div>
+            <button class="contrast-btn" onclick="toggleContrast()">🎨 HC</button>
+        </div>
+
+        <div class="main-content">
+            <div id="request-types">
+                <h3 style="text-align: center; margin-top: 0;">What do you need help with?</h3>
+                <div class="type-buttons">
+                    <button class="type-btn" onclick="callStaff('find_book')">
+                        🔍 Help Finding a Book
+                    </button>
+                    <button class="type-btn" onclick="callStaff('need_help')">
+                        🆘 General Assistance
+                    </button>
+                </div>
+            </div>
+
+            <div id="status-section">
+                <div class="status-message">Staff Coming...</div>
+                
+                <div class="ripple-container">
+                    <div class="ripple"></div>
+                    <div class="ripple"></div>
+                    <div class="ripple"></div>
+                </div>
+
+                <div class="timer" id="timer">0:00</div>
+
+                <div class="progress-steps">
+                    <div class="step done">
+                        <div class="step-icon">✓</div>
+                        <div class="step-text">Request sent</div>
+                    </div>
+                    <div class="step active" id="step-notified">
+                        <div class="step-icon">2</div>
+                        <div class="step-text">Notifying staff member</div>
+                    </div>
+                    <div class="step" id="step-coming">
+                        <div class="step-icon">3</div>
+                        <div class="step-text">Staff coming</div>
+                    </div>
+                </div>
+
+                <div class="request-card">
+                    <h4>Request Details</h4>
+                    <p><strong>Type:</strong> <span id="request-type"></span></p>
+                    <p><strong>Requested at:</strong> <span id="request-time"></span></p>
+                    <p><strong>Location:</strong> Auto-detected</p>
+                </div>
+
+                <button class="cancel-btn" onclick="cancelRequest()">✕ Cancel Request</button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="goHome()">🏠</div>
+            <div class="nav-item" onclick="goToLoans()">👤</div>
+            <div class="nav-item" onclick="goToScan()">📷</div>
+            <div class="nav-item" onclick="goToCall()">📞</div>
+            <div class="nav-item" onclick="logout()">⚙️</div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentRequestId = null;
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        const DEFAULT_FONT_SIZE = 14;
+        let currentFontSize = DEFAULT_FONT_SIZE;
+
+        window.onload = function() {
+            loadAccessibilitySettings();
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            currentUser = JSON.parse(user);
+        };
+
+        function loadAccessibilitySettings() {
+            const settings = localStorage.getItem('accessibility');
+            if (!settings) return;
+            
+            const data = JSON.parse(settings);
+            
+            if (data.isHighContrast) document.body.classList.add('high-contrast');
+            
+            if (data.fontSize) {
+                currentFontSize = data.fontSize;
+                applyFontSize(currentFontSize);
+            }
+        }
+
+        function applyFontSize(size) {
+            document.documentElement.style.setProperty('--font-size-base', size + 'px');
+            document.documentElement.style.setProperty('--font-size-h1', (size + 18) + 'px');
+            document.documentElement.style.setProperty('--font-size-h2', (size + 10) + 'px');
+            document.documentElement.style.setProperty('--font-size-button', (size + 2) + 'px');
+        }
+
+        function increaseFont() {
+            if (currentFontSize < 24) {
+                currentFontSize += 4;
+                applyFontSize(currentFontSize);
+                saveAccessibilitySettings();
+            }
+        }
+
+        function decreaseFont() {
+            if (currentFontSize > 10) {
+                currentFontSize -= 4;
+                applyFontSize(currentFontSize);
+                saveAccessibilitySettings();
+            }
+        }
+
+        function resetFont() {
+            currentFontSize = DEFAULT_FONT_SIZE;
+            applyFontSize(currentFontSize);
+            saveAccessibilitySettings();
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            saveAccessibilitySettings();
+        }
+
+        function saveAccessibilitySettings() {
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            localStorage.setItem('accessibility', JSON.stringify({
+                isHighContrast: isHighContrast,
+                fontSize: currentFontSize
+            }));
+        }
+
+        function callStaff(requestType) {
+            fetch('/api/service-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, requestType: requestType })
+            })
+            .then(r => r.json())
+            .then(request => {
+                currentRequestId = request.id;
+                document.getElementById('request-type').textContent = requestType === 'find_book' ? 'Help Finding a Book' : 'General Assistance';
+                document.getElementById('request-time').textContent = new Date().toLocaleTimeString();
+                showStatusSection();
+                startTimer();
+                pollRequestStatus();
+            })
+            .catch(e => alert('Error: ' + e));
+        }
+
+        function showStatusSection() {
+            document.getElementById('request-types').classList.add('hidden');
+            document.getElementById('status-section').classList.add('show');
+        }
+
+        function hideStatusSection() {
+            document.getElementById('status-section').classList.remove('show');
+            document.getElementById('request-types').classList.remove('hidden');
+            clearInterval(timerInterval);
+            currentRequestId = null;
+        }
+
+        function startTimer() {
+            elapsedSeconds = 0;
+            updateTimer();
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                updateTimer();
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const seconds = elapsedSeconds % 60;
+            const paddedSeconds = seconds < 10 ? '0' + seconds : seconds;
+            document.getElementById('timer').textContent = minutes + ':' + paddedSeconds;
+        }
+
+        function pollRequestStatus() {
+            const poll = setInterval(() => {
+                if (!currentRequestId) {
+                    clearInterval(poll);
+                    return;
+                }
+                
+                fetch('/api/service-requests/' + currentRequestId)
+                    .then(r => r.json())
+                    .then(request => {
+                        if (request.status === 'in_progress') {
+                            document.getElementById('step-notified').classList.remove('active');
+                            document.getElementById('step-notified').classList.add('done');
+                            document.getElementById('step-coming').classList.add('active');
+                            document.querySelector('.status-message').textContent = 'Staff member is coming!';
+                        }
+                        if (request.status === 'completed') {
+                            clearInterval(poll);
+                            clearInterval(timerInterval);
+                            showCompletionMessage();
+                        }
+                    })
+                    .catch(e => console.log('Poll error:', e));
+            }, 3000);
+        }
+
+        function showCompletionMessage() {
+            document.querySelector('.status-message').innerHTML = '<span class="success-message">✓ Staff member has arrived!</span>';
+        }
+
+        function cancelRequest() {
+            if (!currentRequestId) return;
+            
+            fetch('/api/service-requests/' + currentRequestId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'cancelled' })
+            })
+            .then(r => r.json())
+            .then(() => {
+                hideStatusSection();
+                alert('Request cancelled');
+            })
+            .catch(e => alert('Error: ' + e));
+        }
+
+        function goHome() { window.location.href = '/index.html'; }
+        function goToLoans() { window.location.href = '/loans.html'; }
+        function goToScan() { alert('Coming soon'); }
+        function goToCall() { window.location.href = '/call-staff.html'; }
+        function logout() { 
+            localStorage.removeItem('currentUser'); 
+            window.location.href = '/index.html'; 
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search Books</title>
+    <title>Map</title>
     <style>
         :root {
             --font-size-base: 14px;
@@ -13,35 +13,50 @@
             background-color: #000000 !important;
             color: #ffff00 !important;
         }
-        body.high-contrast button, body.high-contrast input {
+        body.high-contrast button {
             background-color: #000000 !important;
             color: #ffff00 !important;
             border: 1px solid #ffff00 !important;
         }
-        body.high-contrast .filter-chip {
-            background-color: #000000 !important;
-            color: #ffff00 !important;
-            border: 1px solid #ffff00 !important;
-        }
-        body.high-contrast .filter-chip.active {
-            background-color: #ffff00 !important;
-            color: #000000 !important;
-        }
-        body.high-contrast .book-card {
+        body.high-contrast .map-box {
             border: 1px solid #ffff00 !important;
             background-color: #000000 !important;
         }
-        body.high-contrast .book-title {
+        body.high-contrast svg {
+            background-color: #000000 !important;
+        }
+        body.high-contrast svg rect {
+            fill: #000000 !important;
+            stroke: #ffff00 !important;
+        }
+        body.high-contrast svg text {
+            fill: #ffff00 !important;
+        }
+        body.high-contrast svg circle {
+            fill: #ffff00 !important;
+            stroke: #ffff00 !important;
+        }
+        body.high-contrast svg path {
+            stroke: #ffff00 !important;
+        }
+        body.high-contrast .info-card {
+            border: 1px solid #ffff00 !important;
+            background-color: #000000 !important;
             color: #ffff00 !important;
         }
-        body.high-contrast .book-author {
+        body.high-contrast .shelf-list li {
+            background-color: #111111 !important;
+            color: #ffff00 !important;
+            border: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .action-btn {
+            border: 1px solid #ffff00 !important;
+        }
+        body.high-contrast .call-btn {
+            background-color: #ff3333 !important;
             color: #ffff00 !important;
         }
-        body.high-contrast .borrow-btn {
-            background-color: #ff9900 !important;
-            color: #000000 !important;
-        }
-        body.high-contrast .go-btn {
+        body.high-contrast .navigate-btn {
             background-color: #ffff00 !important;
             color: #000000 !important;
         }
@@ -53,10 +68,6 @@
             background-color: #000000 !important;
             border-bottom: 1px solid #ffff00 !important;
         }
-        body.high-contrast .filters {
-            background-color: #000000 !important;
-            border-bottom: 1px solid #ffff00 !important;
-        }
         body.high-contrast .bottom-nav {
             background-color: #000000 !important;
             border-top: 1px solid #ffff00 !important;
@@ -64,7 +75,10 @@
         body.high-contrast .main-content {
             background-color: #000000 !important;
         }
-        body.high-contrast .result-count {
+        body.high-contrast .map-title {
+            color: #ffff00 !important;
+        }
+        body.high-contrast .info-card h4 {
             color: #ffff00 !important;
         }
         * {
@@ -97,18 +111,10 @@
             font-size: 20px;
             cursor: pointer;
         }
-        .search-input {
+        .title {
             flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .clear-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
         }
         .accessibility-panel {
             display: flex;
@@ -148,139 +154,86 @@
         .contrast-btn:hover {
             background-color: #0056b3;
         }
-        .filters {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid #ddd;
-            overflow-x: auto;
-            background-color: #f9f9f9;
-        }
-        .filter-chip {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            background-color: white;
-            color: #666;
-            cursor: pointer;
-            font-size: 12px;
-            white-space: nowrap;
-            transition: all 0.3s;
-        }
-        .filter-chip:hover {
-            border-color: #007bff;
-        }
-        .filter-chip.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
         .main-content {
             flex: 1;
-            padding: 15px 20px;
+            padding: 20px;
             overflow-y: auto;
             background-color: #ffffff;
         }
-        .result-count {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 15px;
-        }
-        .book-card {
-            display: flex;
-            gap: 15px;
+        .map-box {
             border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-            background-color: white;
-            align-items: flex-start;
-            transition: all 0.3s;
+            padding: 15px;
+            background-color: #f5f5f5;
+            margin-bottom: 20px;
         }
-        .book-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .book-cover {
-            width: 50px;
-            height: 70px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        .book-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .book-title {
+        .map-title {
             font-weight: bold;
+            margin-bottom: 10px;
             font-size: 14px;
         }
-        .book-author {
+        svg {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+        .info-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background-color: white;
+            margin-bottom: 15px;
+        }
+        .info-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        .info-card p {
+            margin: 6px 0;
             font-size: 12px;
             color: #666;
         }
-        .book-labels {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+        .shelf-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
         }
-        .label {
-            font-size: 10px;
-            padding: 3px 6px;
-            border-radius: 3px;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-        .label.low-access {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .label.available {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .label.borrowed {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .book-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .borrow-btn {
-            background-color: #ff9900;
-            color: white;
-            border: none;
-            padding: 6px 10px;
+        .shelf-list li {
+            padding: 8px;
+            background-color: #f9f9f9;
             border-radius: 4px;
+            margin: 6px 0;
             font-size: 12px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
         }
-        .borrow-btn:hover {
-            background-color: #e68a00;
+        .call-btn {
+            background-color: #dc3545;
+            color: white;
         }
-        .go-btn {
+        .call-btn:hover {
+            background-color: #c82333;
+        }
+        .navigate-btn {
             background-color: #007bff;
             color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
         }
-        .go-btn:hover {
+        .navigate-btn:hover {
             background-color: #0056b3;
-        }
-        .go-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
         }
         .bottom-nav {
             background-color: white;
@@ -303,8 +256,7 @@
     <div class="container">
         <div class="top-bar">
             <button class="back-btn" onclick="goHome()">←</button>
-            <input type="text" class="search-input" id="search-input" placeholder="Search books..." value="">
-            <button class="clear-btn" onclick="clearSearch()">✕</button>
+            <div class="title">Map</div>
         </div>
 
         <div class="accessibility-panel">
@@ -316,15 +268,66 @@
             <button class="contrast-btn" onclick="toggleContrast()">🎨 HC</button>
         </div>
 
-        <div class="filters">
-            <button class="filter-chip active" id="filter-low" onclick="toggleFilter('low')">♿ Low Shelf</button>
-            <button class="filter-chip" id="filter-available" onclick="toggleFilter('available')">In Library</button>
-            <button class="filter-chip" id="filter-ebook" onclick="toggleFilter('ebook')">E-Book</button>
-        </div>
-
         <div class="main-content">
-            <div class="result-count" id="result-count"></div>
-            <div id="books-list"></div>
+            <div class="map-box">
+                <div class="map-title">Library Floor 1</div>
+                <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Grid background -->
+                    <defs>
+                        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="400" height="300" fill="#ffffff"/>
+                    <rect width="400" height="300" fill="url(#grid)"/>
+                    
+                    <!-- Walls -->
+                    <rect x="10" y="10" width="380" height="280" fill="none" stroke="#333" stroke-width="3"/>
+                    
+                    <!-- Entrance -->
+                    <rect x="185" y="280" width="30" height="20" fill="#90EE90" stroke="#333" stroke-width="2"/>
+                    <text x="200" y="295" text-anchor="middle" font-size="10" fill="#333">Entrance</text>
+                    
+                    <!-- Zone A -->
+                    <text x="50" y="30" font-size="12" font-weight="bold" fill="#333">Zone A</text>
+                    <rect x="20" y="50" width="70" height="50" fill="white" stroke="#007bff" stroke-width="2" rx="4"/>
+                    <text x="55" y="80" text-anchor="middle" font-size="11" fill="#333">A1</text>
+                    
+                    <rect x="20" y="120" width="70" height="50" fill="white" stroke="#007bff" stroke-width="2" rx="4"/>
+                    <text x="55" y="150" text-anchor="middle" font-size="11" fill="#333">A2</text>
+                    
+                    <!-- Zone B -->
+                    <text x="310" y="30" font-size="12" font-weight="bold" fill="#333">Zone B</text>
+                    <rect x="310" y="50" width="70" height="50" fill="white" stroke="#007bff" stroke-width="2" rx="4"/>
+                    <text x="345" y="80" text-anchor="middle" font-size="11" fill="#333">B1</text>
+                    
+                    <rect x="310" y="120" width="70" height="50" fill="white" stroke="#007bff" stroke-width="2" rx="4"/>
+                    <text x="345" y="150" text-anchor="middle" font-size="11" fill="#333">B2</text>
+                    
+                    <!-- Service desk -->
+                    <rect x="160" y="150" width="80" height="40" fill="#FFE4B5" stroke="#333" stroke-width="2" rx="4"/>
+                    <text x="200" y="175" text-anchor="middle" font-size="10" fill="#333">Desk</text>
+                    
+                    <!-- You are here -->
+                    <circle cx="200" cy="270" r="8" fill="#28a745" stroke="#333" stroke-width="2"/>
+                    <text x="200" y="255" text-anchor="middle" font-size="10" fill="#333">You</text>
+                </svg>
+            </div>
+
+            <div class="info-card">
+                <h4>Available Shelves</h4>
+                <ul class="shelf-list">
+                    <li>📍 <strong>A1</strong> - Zone A, Floor 1 (♿ Low accessible)</li>
+                    <li>📍 <strong>A2</strong> - Zone A, Floor 1 (♿ Low accessible)</li>
+                    <li>📍 <strong>B1</strong> - Zone B, Floor 1</li>
+                    <li>📍 <strong>B2</strong> - Zone B, Floor 1</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn call-btn" onclick="goToCall()">📞 Call Staff</button>
+                <button class="action-btn navigate-btn" onclick="goHome()">Back</button>
+            </div>
         </div>
 
         <div class="bottom-nav">
@@ -338,7 +341,6 @@
 
     <script>
         let currentUser = null;
-        let filterLowAccess = true;
         const DEFAULT_FONT_SIZE = 14;
         let currentFontSize = DEFAULT_FONT_SIZE;
 
@@ -350,7 +352,6 @@
                 return;
             }
             currentUser = JSON.parse(user);
-            loadAllBooks();
         };
 
         function loadAccessibilitySettings() {
@@ -409,90 +410,9 @@
             }));
         }
 
-        function toggleFilter(type) {
-            if (type === 'low') {
-                filterLowAccess = !filterLowAccess;
-                document.getElementById('filter-low').classList.toggle('active');
-            }
-            search();
-        }
-
-        function loadAllBooks() {
-            fetch('/api/books')
-                .then(r => r.json())
-                .then(books => displayBooks(books))
-                .catch(e => alert('Error: ' + e));
-        }
-
-        function search() {
-            const keyword = document.getElementById('search-input').value;
-            let url = '/api/books/search?q=' + encodeURIComponent(keyword);
-            if (filterLowAccess) {
-                url += '&lowAccessible=true';
-            }
-            
-            fetch(url)
-                .then(r => r.json())
-                .then(books => displayBooks(books))
-                .catch(e => alert('Error: ' + e));
-        }
-
-        function displayBooks(books) {
-            document.getElementById('result-count').textContent = `Found ${books.length} books`;
-            
-            if (books.length === 0) {
-                document.getElementById('books-list').innerHTML = '<p>No books found</p>';
-                return;
-            }
-            
-            const html = books.map(book => `
-                <div class="book-card">
-                    <div class="book-cover">📕</div>
-                    <div class="book-info">
-                        <div class="book-title">${book.title}</div>
-                        <div class="book-author">by ${book.author}</div>
-                        <div class="book-labels">
-                            <span class="label">Fiction</span>
-                            <span class="label low-access">♿</span>
-                            <span class="label ${book.status === 'available' ? 'available' : 'borrowed'}">
-                                ${book.status === 'available' ? 'Available' : 'Borrowed'}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="book-actions">
-                        ${book.status === 'available' ? 
-                            `<button class="borrow-btn" onclick="debugBorrow(${book.id})">🔧 debug_borrow</button>` : 
-                            '<button class="borrow-btn" disabled>Borrowed</button>'}
-                        <button class="go-btn" onclick="goToMap(${book.id})">📍 Map</button>
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById('books-list').innerHTML = html;
-        }
-
-        function debugBorrow(bookId) {
-            fetch('/api/loans', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUser.id, bookId: bookId })
-            })
-            .then(r => r.json())
-            .then(() => {
-                alert('DEBUG: Book borrowed successfully!');
-                loadAllBooks();
-            })
-            .catch(e => alert('Error: ' + e));
-        }
-
-        function clearSearch() {
-            document.getElementById('search-input').value = '';
-            loadAllBooks();
-        }
-
         function goHome() { window.location.href = '/index.html'; }
         function goToLoans() { window.location.href = '/loans.html'; }
         function goToCall() { window.location.href = '/call-staff.html'; }
-        function goToMap(bookId) { window.location.href = '/map.html?book=' + bookId; }
         function goToScan() { alert('Coming soon'); }
         function logout() { 
             localStorage.removeItem('currentUser'); 
