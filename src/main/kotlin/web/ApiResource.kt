@@ -25,7 +25,14 @@ fun Route.api(service: LibraryService) {
     }
     get("/api/books/search") {
         val keyword = call.request.queryParameters["q"] ?: ""
-        call.respond(service.searchBooks(keyword))
+        val lowAccessibleOnly = call.request.queryParameters["lowAccessible"]?.toBoolean() ?: false
+        
+        val results = if (lowAccessibleOnly) {
+            service.searchBooksLowAccessible(keyword)
+        } else {
+            service.searchBooks(keyword)
+        }
+        call.respond(results)
     }
     get("/api/books/{id}") {
         val id = call.parameters["id"]!!.toInt()

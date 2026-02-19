@@ -16,7 +16,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 class V1__create_widgets: BaseJavaMigration() {
     override fun migrate(context: Context?) {
         transaction {
-            
             SchemaUtils.create(
                 Users, 
                 Books, 
@@ -27,20 +26,9 @@ class V1__create_widgets: BaseJavaMigration() {
                 ServiceRequests
             )
 
-            
             val user1 = Users.insert { it[username] = "alice"; it[email] = "alice@test.com" } get Users.id
             val user2 = Users.insert { it[username] = "bob"; it[email] = "bob@test.com" } get Users.id
 
-            
-            Books.insert { it[title] = "Kotlin in Action"; it[author] = "Dmitry Jemerov"; it[status] = "available" }
-            Books.insert { it[title] = "Ktor Guide"; it[author] = "Ryan Harrison"; it[status] = "available" }
-            Books.insert { it[title] = "Clean Code"; it[author] = "Robert Martin"; it[status] = "available" }
-
-          
-            AccessibilitySettings.insert { it[userId] = user1; it[fontSizeLevel] = 1; it[isHighContrast] = false }
-            AccessibilitySettings.insert { it[userId] = user2; it[fontSizeLevel] = 1; it[isHighContrast] = false }
-
-           
             val zone1 = Zones.insert { 
                 it[zoneName] = "A Zone"; 
                 it[floorNumber] = 1; 
@@ -53,10 +41,16 @@ class V1__create_widgets: BaseJavaMigration() {
                 it[congestionLevel] = "medium" 
             } get Zones.id
 
-          
-            Shelves.insert { it[zoneId] = zone1; it[shelfCode] = "A1"; it[isLowAccessible] = true }
-            Shelves.insert { it[zoneId] = zone1; it[shelfCode] = "A2"; it[isLowAccessible] = true }
-            Shelves.insert { it[zoneId] = zone2; it[shelfCode] = "B1"; it[isLowAccessible] = false }
+            val shelf1 = Shelves.insert { it[zoneId] = zone1; it[shelfCode] = "A1"; it[isLowAccessible] = true } get Shelves.id
+            val shelf2 = Shelves.insert { it[zoneId] = zone1; it[shelfCode] = "A2"; it[isLowAccessible] = true } get Shelves.id
+            val shelf3 = Shelves.insert { it[zoneId] = zone2; it[shelfCode] = "B1"; it[isLowAccessible] = false } get Shelves.id
+
+            Books.insert { it[title] = "Kotlin in Action"; it[author] = "Dmitry Jemerov"; it[status] = "available"; it[shelfId] = shelf1 }
+            Books.insert { it[title] = "Ktor Guide"; it[author] = "Ryan Harrison"; it[status] = "available"; it[shelfId] = shelf2 }
+            Books.insert { it[title] = "Clean Code"; it[author] = "Robert Martin"; it[status] = "available"; it[shelfId] = shelf3 }
+
+            AccessibilitySettings.insert { it[userId] = user1; it[fontSizeLevel] = 1; it[isHighContrast] = false }
+            AccessibilitySettings.insert { it[userId] = user2; it[fontSizeLevel] = 1; it[isHighContrast] = false }
         }
     }
 }

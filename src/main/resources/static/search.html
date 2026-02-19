@@ -17,6 +17,9 @@
             background-color: #ffff00 !important;
             color: #000000 !important;
         }
+        body.high-contrast input[type="checkbox"] {
+            accent-color: #ffff00;
+        }
         body {
             font-family: Arial;
             margin: 0;
@@ -29,7 +32,12 @@
         .accessibility-panel { display: flex; gap: 15px; margin-bottom: 20px; padding: 10px; border: 2px solid #ccc; }
         .font-size-controls { display: flex; gap: 5px; }
         .font-size-btn { padding: 5px 10px; min-width: 40px; }
-        .book { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .search-section { margin: 20px 0; }
+        .filters { margin: 15px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .filter-item { margin: 10px 0; }
+        .filter-item label { font-size: var(--font-size-button); cursor: pointer; }
+        .filter-item input[type="checkbox"] { margin-right: 10px; }
+        .book { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -44,10 +52,19 @@
         <button onclick="toggleContrast()">🎨 High Contrast</button>
     </div>
 
-    <div>
+    <div class="search-section">
         <input type="text" id="search-input" placeholder="Search by title or author">
         <button onclick="search()">Search</button>
         <button onclick="goHome()">Home</button>
+    </div>
+
+    <div class="filters">
+        <div class="filter-item">
+            <label>
+                <input type="checkbox" id="low-accessible" onchange="search()">
+                ♿ Low Accessible Shelves Only
+            </label>
+        </div>
     </div>
 
     <div id="books-list"></div>
@@ -139,18 +156,31 @@
 
         function search() {
             const keyword = document.getElementById('search-input').value;
-            fetch('/api/books/search?q=' + keyword)
+            const lowAccessibleOnly = document.getElementById('low-accessible').checked;
+            
+            let url = '/api/books/search?q=' + encodeURIComponent(keyword);
+            if (lowAccessibleOnly) {
+                url += '&lowAccessible=true';
+            }
+            
+            fetch(url)
                 .then(r => r.json())
                 .then(books => displayBooks(books))
                 .catch(e => alert('Error: ' + e));
         }
 
         function displayBooks(books) {
+            if (books.length === 0) {
+                document.getElementById('books-list').innerHTML = '<p>No books found</p>';
+                return;
+            }
+            
             const html = books.map(book => `
                 <div class="book">
                     <h3>${book.title}</h3>
                     <p>Author: ${book.author}</p>
                     <p>Status: ${book.status}</p>
+                    <p>Shelf ID: ${book.shelfId || 'N/A'}</p>
                     ${book.status === 'available' ? 
                         `<button onclick="borrowBook(${book.id})">Borrow</button>` : 
                         '<button disabled>Borrowed</button>'}
@@ -168,7 +198,7 @@
             .then(r => r.json())
             .then(() => {
                 alert('Book borrowed successfully!');
-                loadAllBooks();
+                search();
             })
             .catch(e => alert('Error: ' + e));
         }
